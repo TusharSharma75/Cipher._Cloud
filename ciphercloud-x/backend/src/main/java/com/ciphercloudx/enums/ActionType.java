@@ -1,0 +1,25 @@
+package com.ciphercloudx.enums;
+
+public enum ActionType {
+    UPLOAD,
+    DOWNLOAD,
+    DELETE,
+    LOGIN,
+    LOGOUT,
+    SHARE,
+    UNSHARE,
+    RENAME,
+    MOVE,
+    COPY,
+    VERSION_RESTORE,
+    PASSWORD_CHANGE,
+    PROFILE_UPDATE,
+    QUOTA_EXCEEDED,
+    INTEGRITY_CHECK_FAILED,
+    TWO_FACTOR_ENABLE,
+    TWO_FACTOR_DISABLE,
+    TWO_FACTOR_VERIFY,
+    ACCOUNT_LOCKED,
+    ACCOUNT_UNLOCKED,
+    PERMISSION_CHANGE
+}
