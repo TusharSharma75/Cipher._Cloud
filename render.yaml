@@ -1,20 +1,7 @@
- 
 services:
   - type: web
     name: ciphercloudx-backend
-    env: java
+    env: docker
     region: singapore
     plan: free
     rootDir: ciphercloud-x/backend
-    buildCommand: "./mvnw clean package -DskipTests"
-    startCommand: "java -jar target/ciphercloud-x-0.0.1-SNAPSHOT.jar"
-    envVars:
-      - key: JAVA_VERSION
-        value: 17
-```
-
-**5. Save file then push:**
-```
-git add .
-git commit -m "Add render.yaml for Java deployment"
-git push origin main
