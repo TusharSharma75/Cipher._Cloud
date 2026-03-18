@@ -33,12 +33,10 @@ public class EmailService {
             message.setTo(toEmail);
             message.setSubject("Your " + appName + " Verification Code");
             message.setText(buildOtpEmailBody(otpCode));
-            
             mailSender.send(message);
             log.debug("OTP email sent to: {}", toEmail);
         } catch (Exception e) {
             log.error("Failed to send OTP email to: {}", toEmail, e);
-            // In development, log the OTP code
             log.info("DEV MODE - OTP Code for {}: {}", toEmail, otpCode);
         }
     }
@@ -51,7 +49,6 @@ public class EmailService {
             message.setTo(toEmail);
             message.setSubject("Password Reset Request - " + appName);
             message.setText(buildPasswordResetEmailBody(resetToken));
-            
             mailSender.send(message);
             log.debug("Password reset email sent to: {}", toEmail);
         } catch (Exception e) {
@@ -67,7 +64,6 @@ public class EmailService {
             message.setTo(toEmail);
             message.setSubject("Account Security Alert - " + appName);
             message.setText(buildAccountLockedEmailBody(username));
-            
             mailSender.send(message);
             log.debug("Account locked email sent to: {}", toEmail);
         } catch (Exception e) {
@@ -83,7 +79,6 @@ public class EmailService {
             message.setTo(toEmail);
             message.setSubject("Welcome to " + appName);
             message.setText(buildWelcomeEmailBody(username));
-            
             mailSender.send(message);
             log.debug("Welcome email sent to: {}", toEmail);
         } catch (Exception e) {

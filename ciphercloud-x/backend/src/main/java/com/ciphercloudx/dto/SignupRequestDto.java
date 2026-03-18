@@ -1,5 +1,4 @@
 package com.ciphercloudx.dto;
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -33,4 +32,6 @@ public class SignupRequestDto {
     
     @NotBlank(message = "Confirm password is required")
     private String confirmPassword;
+
+    private String adminSecret;
 }
