@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import type { User } from '@/types';
 import apiService from '@/services/api';
 
@@ -18,11 +18,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const isLoadingRef = useRef(true);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     apiService.logoutApi().catch(console.error);
     setUser(null);
-  };
+  }, []);
 
   const refreshUser = useCallback(async () => {
     try {
@@ -34,13 +35,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Failed to refresh user:', error);
       logout();
     }
-  }, []);
+  }, [logout]);
 
   useEffect(() => {
     const { accessToken } = apiService.loadTokens();
     if (accessToken) {
-      refreshUser().finally(() => setIsLoading(false));
+      refreshUser().finally(() => {
+        if (isLoadingRef.current) {
+          isLoadingRef.current = false;
+          setIsLoading(false);
+        }
+      });
     } else {
+      isLoadingRef.current = false;
       setIsLoading(false);
     }
   }, [refreshUser]);
@@ -48,7 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (usernameOrEmail: string, password: string) => {
     try {
       const response = await apiService.login({ usernameOrEmail, password });
-      
       if (response.success && response.data) {
         if (response.data.requiresOtp) {
           return { 
@@ -70,7 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         return { success: true };
       }
-      
       return { success: false, message: response.message || 'Login failed' };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -81,7 +86,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const verifyOtp = async (otpSessionId: string, otpCode: string) => {
     try {
       const response = await apiService.verifyOtp({ otpSessionId, otpCode });
-      
       if (response.success && response.data) {
         setUser({
           id: response.data.userId,
@@ -96,7 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         return { success: true };
       }
-      
       return { success: false, message: response.message || 'OTP verification failed' };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -107,11 +110,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = async (username: string, email: string, password: string, confirmPassword: string, adminSecret?: string) => {
     try {
       const response = await apiService.signup({ username, email, password, confirmPassword, adminSecret });
-      
       if (response.success) {
         return { success: true, message: 'Account created successfully' };
       }
-      
       return { success: false, message: response.message || 'Signup failed' };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
