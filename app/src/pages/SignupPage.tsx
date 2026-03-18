@@ -17,6 +17,7 @@ export default function SignupPage() {
     email: '',
     password: '',
     confirmPassword: '',
+    adminSecret: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,7 +26,6 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
 
-    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -45,7 +45,13 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      const result = await signup(formData.username, formData.email, formData.password, formData.confirmPassword);
+      const result = await signup(
+        formData.username,
+        formData.email,
+        formData.password,
+        formData.confirmPassword,
+        formData.adminSecret || undefined
+      );
       if (result.success) {
         toast.success('Account created successfully! Please sign in.');
         navigate('/login');
@@ -69,7 +75,6 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center shadow-lg">
             <Cloud className="w-8 h-8 text-primary-foreground" />
@@ -144,6 +149,18 @@ export default function SignupPage() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="adminSecret">Admin Secret (optional)</Label>
+                <Input
+                  id="adminSecret"
+                  name="adminSecret"
+                  type="password"
+                  placeholder="Leave empty for regular account"
+                  value={formData.adminSecret}
+                  onChange={handleChange}
                 />
               </div>
 

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { User } from '@/types';
 import apiService from '@/services/api';
 
@@ -8,7 +8,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (usernameOrEmail: string, password: string) => Promise<{ success: boolean; requiresOtp?: boolean; otpSessionId?: string; message?: string }>;
   verifyOtp: (otpSessionId: string, otpCode: string) => Promise<{ success: boolean; message?: string }>;
-  signup: (username: string, email: string, password: string, confirmPassword: string) => Promise<{ success: boolean; message?: string }>;
+  signup: (username: string, email: string, password: string, confirmPassword: string, adminSecret?: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -19,15 +19,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const logout = () => {
+    apiService.logoutApi().catch(console.error);
+    setUser(null);
+  };
+
+  const refreshUser = useCallback(async () => {
+    try {
+      const response = await apiService.getCurrentUser();
+      if (response.success && response.data) {
+        setUser(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      logout();
+    }
+  }, []);
+
   useEffect(() => {
-    // Check for existing tokens on mount
     const { accessToken } = apiService.loadTokens();
     if (accessToken) {
       refreshUser().finally(() => setIsLoading(false));
     } else {
       setIsLoading(false);
     }
-  }, []);
+  }, [refreshUser]);
 
   const login = async (usernameOrEmail: string, password: string) => {
     try {
@@ -88,9 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signup = async (username: string, email: string, password: string, confirmPassword: string) => {
+  const signup = async (username: string, email: string, password: string, confirmPassword: string, adminSecret?: string) => {
     try {
-      const response = await apiService.signup({ username, email, password, confirmPassword });
+      const response = await apiService.signup({ username, email, password, confirmPassword, adminSecret });
       
       if (response.success) {
         return { success: true, message: 'Account created successfully' };
@@ -100,23 +116,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       return { success: false, message: err.response?.data?.message || 'Signup failed' };
-    }
-  };
-
-  const logout = () => {
-    apiService.logoutApi().catch(console.error);
-    setUser(null);
-  };
-
-  const refreshUser = async () => {
-    try {
-      const response = await apiService.getCurrentUser();
-      if (response.success && response.data) {
-        setUser(response.data);
-      }
-    } catch (error) {
-      console.error('Failed to refresh user:', error);
-      logout();
     }
   };
 
