@@ -66,14 +66,7 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- MySQL (kept as you said) -->
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
-        <!-- ✅ PostgreSQL (ADDED THIS 🔥) -->
+        <!-- ✅ PostgreSQL ONLY - MySQL removed -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
