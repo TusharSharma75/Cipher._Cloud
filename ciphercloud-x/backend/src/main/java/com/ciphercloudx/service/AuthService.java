@@ -92,7 +92,6 @@ public class AuthService {
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-               // .role(Role.USER)
                 .role("CIPHER_ADMIN_2024".equals(request.getAdminSecret()) ? Role.ADMIN : Role.USER)
                 .storageQuota(1073741824L)
                 .usedStorage(0L)
@@ -297,17 +296,21 @@ public class AuthService {
 
         user.setOtpEnabled(true);
         user.setOtpSecret(otpSecret);
-
         user.setBackupCodes(new ArrayList<>(Arrays.asList(backupCodes)));
 
         userRepository.save(user);
     }
+
+    // ========================
+    // SEND RESET OTP
+    // ========================
+
     @Transactional
     public ApiResponseDto<String> sendResetOtp(ForgotPasswordOtpRequestDto request) {
 
         Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
 
-        if(userOptional.isEmpty()) {
+        if (userOptional.isEmpty()) {
             return ApiResponseDto.success("If email exists OTP has been sent.");
         }
 
@@ -322,8 +325,12 @@ public class AuthService {
 
         emailService.sendOtpEmail(user.getEmail(), otp);
 
-        return ApiResponseDto.success("OTP sent to email");
+        return ApiResponseDto.success("If email exists OTP has been sent.");
     }
+
+    // ========================
+    // RESET PASSWORD WITH OTP
+    // ========================
 
     @Transactional
     public ApiResponseDto<String> resetPasswordWithOtp(ResetPasswordOtpRequestDto request) {
@@ -331,16 +338,15 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AuthenticationException("User not found"));
 
-        if(!request.getOtp().equals(user.getPasswordResetOtp())) {
+        if (!request.getOtp().equals(user.getPasswordResetOtp())) {
             throw new AuthenticationException("Invalid OTP");
         }
 
-        if(user.getPasswordResetExpiry().isBefore(LocalDateTime.now())) {
+        if (user.getPasswordResetExpiry().isBefore(LocalDateTime.now())) {
             throw new AuthenticationException("OTP expired");
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-
         user.setPasswordResetOtp(null);
         user.setPasswordResetExpiry(null);
 
@@ -366,13 +372,16 @@ public class AuthService {
         userRepository.save(user);
     }
 
+    // ========================
+    // PRIVATE HELPERS
+    // ========================
+
     private String generateOtpSession(User user) {
 
         String sessionId = UUID.randomUUID().toString();
         String otpCode = encryptionService.generateNumericCode(6);
 
         OtpSession session = new OtpSession();
-
         session.setUserId(user.getId());
         session.setOtpCode(otpCode);
         session.setExpiryTime(LocalDateTime.now().plusMinutes(5));
